@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>Torrent to magnet</title>
+        <link rel="stylesheet" href="http://cdn.bootcss.com/bootswatch/3.3.4/readable/bootstrap.min.css" type="text/css" media="all" />
+        <style type="text/css">
+            html {
+                position: relative;
+                min-height: 100%;
+            }
+            body {
+                /* Margin bottom by footer height */
+                margin-bottom: 60px;
+            }
+            .footer {
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+                /* Set the fixed height of the footer here */
+                height: 60px;
+                background-color: #f5f5f5;
+            }
+            .footer .container {
+                width: auto;
+                max-width: 680px;
+                padding: 0 15px;
+            }
+            .footer .container .text-muted {
+                margin: 20px 0;
+            }
+            .main {
+                position: absolute;
+                top: 40%;
+                width: 100%;
+            }
+            .torrent-link {
+            }
+            .msg-prompt {
+                display: none;
+            }
+            .msg-prompt input {
+                margin: 0 auto;
+                padding: 5px 10px;
+                display: none;
+                width: 90%;
+                color: #fff;
+                background-color: #3fad46;
+                border: none;
+                outline:none
+            }
+            .file-upload-progress {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container main">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <div class="alert alert-dismissible msg-prompt">
+                        <button type="button" class="close"><span aria-hidden="true">&times;</span></button>
+                        <p></p>
+                        <input type="text" readonly="readonly" class="text-center">
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control" id="torrent-link" placeholder="http://xxx.xxx/xxx.torrent">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default torrent-link-convert" disabled="disabled" type="button">Convert</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <div class="progress file-upload-progress">
+                        <div class="progress-bar progress-bar-info active" style="width: 0%">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+        </div>
+        <footer class="footer">
+            <div class="container">
+                <p class="text-muted">Convert Torrent to magnet.</p>
+            </div>
+        </footer>
+        <script src="http://cdn.bootcss.com/jquery/2.1.3/jquery.min.js"></script>
+        <script src="http://cdn.bootcss.com/dropzone/4.0.1/min/dropzone.min.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            $(function() {
+
+                var torrentDropzone = new Dropzone("#torrent-link", {
+                    url: "/api/torrent/file",
+                    clickable: false
+                });
+                torrentDropzone.on('addedfile', function(file) {
+                    $('.file-upload-progress').show();
+                });
+                torrentDropzone.on('totaluploadprogress', function(progress) {
+                    $('.file-upload-progress .progress-bar').css('width', progress + '%');
+                    $('.file-upload-progress .progress-bar').text(progress + ' %');
+                });
+                torrentDropzone.on('queuecomplete', function(progress) {
+                    $('.file-upload-progress .progress-bar').css('width', '100%');
+                    $('.file-upload-progress .progress-bar').text('100 %');
+                });
+                torrentDropzone.on('success', function(file, data) {
+                    $('.file-upload-progress').fadeOut('slow', function() {
+                        if (data.meta.code == 0) {
+                            $('.msg-prompt input').val(data.data.magnet).fadeIn();
+                            $('.msg-prompt').addClass('alert-success');
+                        } else {
+                            $('.msg-prompt').addClass('alert-warning');
+                            $('.msg-prompt p').text(data.meta.msg);
+                        }
+                        $('.msg-prompt').slideDown('slow');
+                    });
+                });
+
+                $('#torrent-link').keyup(function() {
+                    if ($(this).val().length > 0) {
+                        $('.torrent-link-convert').prop('disabled', false);
+                    } else {
+                        $('.torrent-link-convert').prop('disabled', true);
+                    }
+                });
+                $('.torrent-link-convert').click(function() {
+                    $(this).prop('disabled', true);
+                    $(this).addClass('active');
+                    var _this = $(this);
+                    var torrent_url = $('#torrent-link').val();
+                    if (torrent_url) {
+                        $.post('/api/torrent/link', {torrent_link: torrent_url})
+                            .success(function(data) {
+                                console.log(data);
+                                if (data.meta.code == 0) {
+                                    $('.msg-prompt input').val(data.data.magnet).fadeIn();
+                                    $('.msg-prompt').addClass('alert-success');
+                                } else {
+                                    $('.msg-prompt').addClass('alert-warning');
+                                    $('.msg-prompt p').text(data.meta.msg);
+                                }
+                                $('.msg-prompt').slideDown('slow');
+                            })
+                        .always(function() {
+                            _this.prop('disabled', false);
+                            _this.removeClass('active');
+                        });
+                    }
+                });
+                $('.msg-prompt .close').click(function() {
+                    $(this).parent().slideUp('slow');
+                    $(this).next().text('');
+                });
+                $('.msg-prompt input').mouseenter(function() {
+                    $(this).select();
+                });
+                $('.msg-prompt input').mouseleave(function() {
+                    $(this).blur();
+                });
+            });
+        </script>
+    </body>
+</html>
