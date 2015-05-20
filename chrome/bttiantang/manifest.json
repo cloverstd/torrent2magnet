@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+
+  "name": "电影天堂",
+  "description": "电影天堂",
+  "version": "0.1",
+  "permissions": [
+    "http://www.bttiantang.com/*",
+    "http://t.2.m.hui.lu/*"
+  ],
+  "background": {
+      "scripts": [
+          "jquery.min.js"
+      ]
+  },
+  "content_scripts": [{
+      "matches": [
+            "http://www.bttiantang.com/*"
+      ],
+      "js": [
+          "jquery.min.js",
+          "main.js"
+      ],
+      "run_at": "document_start"
+  }]
+}
