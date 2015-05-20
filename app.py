@@ -128,6 +128,42 @@ class TorrentFileHandler(APIBaseHandler):
             }
             self.success(data)
 
+class TorrentBTTianTangHandler(APIBaseHandler):
+
+    @coroutine
+    def post(self):
+        url = self.get_argument("url")
+        id = self.get_argument("id")
+        uhash = self.get_argument("uhash")
+        x = self.get_argument("imageField.x")
+        y = self.get_argument("imageField.y")
+
+        http_client = AsyncHTTPClient()
+
+        if url[0] == '/':
+            url = url[1:]
+        download_url = "http://www.bttiantang.com/{}".format(url)
+        data = {
+            "action": "download",
+            "id": id,
+            "uhash": uhash,
+            "imageField.x": x,
+            "imageField.y": y,
+        }
+        response = yield http_client.fetch(download_url, method="POST", body=urllib.urlencode(data))
+
+        try:
+            magnet, info = torrent2magnet(response.body)
+        except bencode.BTFailure as e:
+            self.fail('4000', str(e))
+            return
+        else:
+            data = {
+                'magnet': magnet,
+                # 'info': info
+            }
+            self.success(data)
+
 class Application(tornado.web.Application):
 
     def __init__(self):
@@ -142,6 +178,7 @@ class Application(tornado.web.Application):
                 (r'/', IndexHandler),
                 (r'/api/torrent/link', TorrentLinkHandler),
                 (r'/api/torrent/file', TorrentFileHandler),
+                (r'/api/torrent/bttiantang', TorrentBTTianTangHandler),
             ]
 
         super(Application, self).__init__(handlers, **settings)
