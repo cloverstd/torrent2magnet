@@ -132,6 +132,8 @@ class TorrentBTTianTangHandler(APIBaseHandler):
 
     @coroutine
     def post(self):
+        self.set_header('Access-Control-Allow-Origin', 'http://www.bttiantang.com')
+
         url = self.get_argument("url")
         id = self.get_argument("id")
         uhash = self.get_argument("uhash")

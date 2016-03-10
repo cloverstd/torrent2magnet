@@ -18,6 +18,7 @@
             "http://www.bttiantang.com/*"
       ],
       "js": [
+          "base64.js",
           "jquery.min.js",
           "main.js"
       ],
