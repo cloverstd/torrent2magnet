@@ -152,7 +152,13 @@ class TorrentBTTianTangHandler(APIBaseHandler):
             "imageField.x": x,
             "imageField.y": y,
         }
-        response = yield http_client.fetch(download_url, method="POST", body=urllib.urlencode(data))
+        response = yield http_client.fetch(
+            download_url,
+            method="POST",
+            body=urllib.urlencode(data),
+            connect_timeout=60,
+            request_timeout=120,
+        )
 
         try:
             magnet, info = torrent2magnet(response.body)
